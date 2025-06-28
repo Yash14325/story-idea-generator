@@ -9,138 +9,118 @@
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js" crossorigin></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js" crossorigin></script>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState } = React;
+  const { useState } = React;
 
-    const App = () => {
-      const [functionType, setFunctionType] = useState('story');
-      const [genre, setGenre] = useState('');
-      const [theme, setTheme] = useState('');
-      const [characterType, setCharacterType] = useState('');
-      const [premise, setPremise] = useState('');
-      const [response, setResponse] = useState('');
-      const [feedback, setFeedback] = useState(null);
-      const [loading, setLoading] = useState(false);
+  const App = () => {
+    const [functionType, setFunctionType] = useState('story');
+    const [genre, setGenre] = useState('');
+    const [theme, setTheme] = useState('');
+    const [characterType, setCharacterType] = useState('');
+    const [premise, setPremise] = useState('');
+    const [response, setResponse] = useState('');
+    const [feedback, setFeedback] = useState(null);
+    const [loading, setLoading] = useState(false);
+    let promptIndex = 0;
 
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        let prompt = '';
+    const prompts = {
+      story: [
+        `Generate a detailed story idea for a ${genre} narrative with a ${theme} theme, featuring a ${characterType} as the protagonist. Include a unique setting, a central conflict, and a potential plot twist.`,
+        `Give me a cool ${genre} story idea with a ${theme} vibe and a ${characterType} lead. Throw in a setting and a twist.`,
+        `Craft an imaginative story concept for a ${genre} tale centered on ${theme}, starring a ${characterType}. Surprise me with an unexpected element or hook.`
+      ],
+      summary: [
+        `Summarize the following story premise in 50 words or less, capturing the main plot, characters, and setting: ${premise}.`,
+        `Give a short summary of this premise: ${premise}. Keep it under 50 words.`,
+        `Provide a concise overview of this story premise, highlighting key characters, setting, and conflict in no more than 50 words: ${premise}.`
+      ],
+      tips: [
+        `Offer five practical writing tips for crafting a compelling ${genre} story, focusing on structure, character development, and pacing.`,
+        `Share five tips to write an awesome ${genre} story, covering characters, plot, and flow.`,
+        `Provide five creative tips for writing a standout ${genre} story, emphasizing unique storytelling techniques and emotional impact.`
+      ]
+    };
 
-        if (functionType === 'story') {
-          if (!genre || !theme || !characterType) {
-            setResponse('Please fill in all fields: genre, theme, and character type.');
-            setLoading(false);
-            return;
-          }
-          prompt = `Generate a detailed story idea for a ${genre} narrative with a ${theme} theme, featuring a ${characterType} as the protagonist. Include a unique setting, a central conflict, and a potential plot twist.`;
-        } else if (functionType === 'summary') {
-          if (!premise) {
-            setResponse('Please provide a story premise.');
-            setLoading(false);
-            return;
-          }
-          prompt = `Summarize the following story premise in 50 words or less, capturing the main plot, characters, and setting: ${premise}.`;
-        } else if (functionType === 'tips') {
-          if (!genre) {
-            setResponse('Please provide a genre.');
-            setLoading(false);
-            return;
-          }
-          prompt = `Offer five practical writing tips for crafting a compelling ${genre} story, focusing on structure, character development, and pacing.`;
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      let prompt = '';
+
+      if (functionType === 'story') {
+        if (!genre || !theme || !characterType) {
+          setResponse('Please fill in all fields: genre, theme, and character type.');
+          setLoading(false);
+          return;
         }
-
-        try {
-          const simulatedResponse = await new Promise((resolve) => {
-            setTimeout(() => {
-              if (functionType === 'story') {
-                resolve(`In a ${genre} world set in a ${theme}-driven ${characterType}'s journey, the protagonist faces a conflict in a unique setting. A shocking twist reveals a hidden truth, altering their path.`);
-              } else if (functionType === 'summary') {
-                resolve(`Summary: ${premise.slice(0, 30)}... (key plot, characters, setting in under 50 words).`);
-              } else {
-                resolve(`1. Plan your ${genre} plot carefully. 2. Develop deep, relatable characters. 3. Maintain consistent pacing. 4. Use vivid, immersive settings. 5. Add unexpected twists for impact.`);
-              }
-            }, 1000);
-          });
-          setResponse(simulatedResponse);
-        } catch (error) {
-          setResponse('Error generating response. Please try again.');
+        prompt = prompts.story[promptIndex % 3];
+      } else if (functionType === 'summary') {
+        if (!premise) {
+          setResponse('Please provide a story premise.');
+          setLoading(false);
+          return;
         }
-        setLoading(false);
-      };
+        prompt = prompts.summary[promptIndex % 3];
+      } else if (functionType === 'tips') {
+        if (!genre) {
+          setResponse('Please provide a genre.');
+          setLoading(false);
+          return;
+        }
+        prompt = prompts.tips[promptIndex % 3];
+      }
 
-      const handleFeedback = (isHelpful) => {
-        setFeedback(isHelpful);
-        console.log(`Feedback: ${isHelpful ? 'Helpful' : 'Not Helpful'}`);
-      };
+      try {
+        const simulatedResponse = await new Promise((resolve) => {
+          setTimeout(() => {
+            if (functionType === 'story') {
+              resolve(`In a ${genre.toLowerCase()} realm, a ${characterType} embarks on a ${theme.toLowerCase()} quest in a ${genre === 'Sci-Fi' ? 'futuristic galaxy' : genre === 'Fantasy' ? 'enchanted forest' : 'unique landscape'}. They face a ${theme === 'Betrayal' ? 'treacherous ally' : 'formidable foe'}, with a twist revealing a ${theme === 'Redemption' ? 'lost family' : 'hidden power'}.`);
+            } else if (functionType === 'summary') {
+              const words = premise.split(' ');
+              const keyPlot = words.slice(0, 3).join(' ');
+              const chars = premise.match(/[A-Za-z]+ explores|[A-Za-z]+ finds/) ? premise.match(/[A-Za-z]+ explores|[A-Za-z]+ finds/)[0] : 'character';
+              const setting = premise.includes('planet') || premise.includes('city') ? premise.match(/planet|city/)[0] : 'unknown land';
+              resolve(`${keyPlot} ${chars} in a ${setting}, uncovering a ${premise.includes('civilization') ? 'hidden society' : 'secret'}. (39 words)`);
+            } else {
+              resolve(`1. Outline a ${genre.toLowerCase()} plot. 2. Craft ${genre === 'Romance' ? 'emotional' : 'complex'} ${characterType.toLowerCase()}s. 3. Pace ${theme.toLowerCase()} scenes. 4. Detail ${genre === 'Sci-Fi' ? 'tech' : 'magic'} settings. 5. Add a ${theme === 'Mystery' ? 'clue' : 'twist'}.`);
+            }
+          }, 1000);
+        });
+        setResponse(simulatedResponse);
+        promptIndex++; // Cycle through prompts
+      } catch (error) {
+        setResponse('Error generating response. Please try again.');
+      }
+      setLoading(false);
+    };
 
-      return (
-        <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 flex flex-col items-center p-4">
-          <h1 className="text-4xl font-bold text-gray-800 mb-6">Story Idea Generator</h1>
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold">Select Function</label>
-                <select
-                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={functionType}
-                  onChange={(e) => setFunctionType(e.target.value)}
-                >
-                  <option value="story">Generate Story Idea</option>
-                  <option value="summary">Summarize Premise</option>
-                  <option value="tips">Writing Tips</option>
-                </select>
-              </div>
-              {functionType === 'story' && (
-                <>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 font-semibold">Genre</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={genre}
-                      onChange={(e) => setGenre(e.target.value)}
-                      placeholder="e.g., Fantasy, Sci-Fi"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 font-semibold">Theme</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={theme}
-                      onChange={(e) => setTheme(e.target.value)}
-                      placeholder="e.g., Adventure, Romance"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 font-semibold">Character Type</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={characterType}
-                      onChange={(e) => setCharacterType(e.target.value)}
-                      placeholder="e.g., Hero, Antihero"
-                    />
-                  </div>
-                </>
-              )}
-              {functionType === 'summary' && (
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-semibold">Story Premise</label>
-                  <textarea
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={premise}
-                    onChange={(e) => setPremise(e.target.value)}
-                    placeholder="Enter your story premise (e.g., A detective in a futuristic city...)"
-                    rows="4"
-                  />
-                </div>
-              )}
-              {functionType === 'tips' && (
+    const handleFeedback = (isHelpful) => {
+      setFeedback(isHelpful);
+      console.log(`Feedback: ${isHelpful ? 'Helpful' : 'Not Helpful'}`);
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 flex flex-col items-center p-4">
+        <h1 className="text-4xl font-bold text-gray-800 mb-6">Story Idea Generator</h1>
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold">Select Function</label>
+              <select
+                className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={functionType}
+                onChange={(e) => setFunctionType(e.target.value)}
+              >
+                <option value="story">Generate Story Idea</option>
+                <option value="summary">Summarize Premise</option>
+                <option value="tips">Writing Tips</option>
+              </select>
+            </div>
+            {functionType === 'story' && (
+              <>
                 <div className="mb-4">
                   <label className="block text-gray-700 font-semibold">Genre</label>
                   <input
@@ -151,45 +131,90 @@
                     placeholder="e.g., Fantasy, Sci-Fi"
                   />
                 </div>
-              )}
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition duration-200"
-                disabled={loading}
-              >
-                {loading ? 'Generating...' : 'Generate'}
-              </button>
-            </form>
-            {response && (
-              <div className="mt-6 p-4 bg-gray-50 rounded-md shadow">
-                <h2 className="text-lg font-semibold text-gray-800">Response</h2>
-                <p className="text-gray-600">{response}</p>
-                <div className="mt-4">
-                  <p className="text-gray-700">Was this helpful?</p>
-                  <button
-                    className="mr-2 bg-green-500 text-white p-1 rounded hover:bg-green-600"
-                    onClick={() => handleFeedback(true)}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                    onClick={() => handleFeedback(false)}
-                  >
-                    No
-                  </button>
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-semibold">Theme</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value)}
+                    placeholder="e.g., Adventure, Romance"
+                  />
                 </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-semibold">Character Type</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={characterType}
+                    onChange={(e) => setCharacterType(e.target.value)}
+                    placeholder="e.g., Hero, Antihero"
+                  />
+                </div>
+              </>
+            )}
+            {functionType === 'summary' && (
+              <div className="mb-4">
+                <label className="block text-gray-700 font-semibold">Story Premise</label>
+                <textarea
+                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={premise}
+                  onChange={(e) => setPremise(e.target.value)}
+                  placeholder="Enter your story premise (e.g., A robot explores a deserted planet...)"
+                  rows="4"
+                />
               </div>
             )}
-          </div>
-          <footer className="mt-6 text-gray-600 text-sm">
-            Built by D. Yaswanth for Vault of Codes Internship
-          </footer>
+            {functionType === 'tips' && (
+              <div className="mb-4">
+                <label className="block text-gray-700 font-semibold">Genre</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  placeholder="e.g., Fantasy, Sci-Fi"
+                />
+              </div>
+            )}
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition duration-200"
+              disabled={loading}
+            >
+              {loading ? 'Generating...' : 'Generate'}
+            </button>
+          </form>
+          {response && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-md shadow">
+              <h2 className="text-lg font-semibold text-gray-800">Response</h2>
+              <p className="text-gray-600">{response}</p>
+              <div className="mt-4">
+                <p className="text-gray-700">Was this helpful?</p>
+                <button
+                  className="mr-2 bg-green-500 text-white p-1 rounded hover:bg-green-600"
+                  onClick={() => handleFeedback(true)}
+                >
+                  Yes
+                </button>
+                <button
+                  className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                  onClick={() => handleFeedback(false)}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      );
-    };
+        <footer className="mt-6 text-gray-600 text-sm">
+          Built by D. Yaswanth for Vault of Codes Internship
+        </footer>
+      </div>
+    );
+  };
 
-    ReactDOM.render(<App />, document.getElementById('root'));
-  </script>
+  ReactDOM.render(<App />, document.getElementById('root'));
+</script>
 </body>
 </html>
